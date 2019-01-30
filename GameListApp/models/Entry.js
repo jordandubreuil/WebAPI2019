@@ -8,7 +8,7 @@ var EntrySchema = new Schema({
     },
     genre:{
         type:String,
-        required:true
+        required:true,
     },
     date:{
         type:Date,
