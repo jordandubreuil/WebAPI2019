@@ -15,7 +15,7 @@ var {ensureAuthenticated} = require('./helpers/auth');
 //Configures routes
 var users = require('./routes/users');
 
-//Passportjs Congif route
+//Passportjs Congig route
 require('./config/passport')(passport);
 
 //gets rid of warning for Mongoose
@@ -49,7 +49,7 @@ app.use(session({
     saveUninitialized:true
 }));
 
-//Setup Psassport Middlware
+//Setup Passport Middlware
 app.use(passport.initialize());
 app.use(passport.session());
 
