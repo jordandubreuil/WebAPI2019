@@ -15,7 +15,7 @@ var {ensureAuthenticated} = require('./helpers/auth');
 //Configures routes
 var users = require('./routes/users');
 
-//Passportjs Congig route
+//Passportjs Config route
 require('./config/passport')(passport);
 
 //gets rid of warning for Mongoose
@@ -30,7 +30,9 @@ mongoose.connect("mongodb://localhost:27017/gameentries",{
 
 //Load in Entry Model
 require('./models/Entry');
+require('./models/Users');
 var Entry = mongoose.model('Entries');
+var Users = mongoose.model('Users');
 
 //sets up handlebars as our view engine
 app.engine('handlebars', exphbs({
@@ -78,7 +80,9 @@ router.get('/', ensureAuthenticated, function(req,res){
 
 //Route to entries
 router.get('/entries', ensureAuthenticated, function(req,res){
-   res.render('gameentries/addgame');
+   res.render('gameentries/addgame',{
+       user:req.user
+    });
 });
 
 //Route to Edit Game Entries
@@ -86,7 +90,10 @@ router.get('/gameentries/edit/:id', function(req,res){
     Entry.findOne({
         _id:req.params.id
     }).then(function(entry){
-         res.render('gameentries/editgame', {entry:entry});
+         res.render('gameentries/editgame', {
+            user:req.user, 
+            entry:entry
+            });
     });
 });
 
@@ -117,12 +124,32 @@ router.get('/login', function(req,res){
     })(req,res,next);
  });
 
-app.get('/',ensureAuthenticated, function(req, res){
+ router.get('/logout', function(req,res){
+     req.logout();
+     res.redirect('/login');
+ });
+
+
+ //Index route
+ app.get('/',ensureAuthenticated, function(req, res){
     //console.log("request made from fetch");
-    Entry.find({})
+    Entry.find({user:req.user.id})
     .then(function(entries){
         res.render('index', {
+            user:req.user,
             entries:entries
+        });
+    });
+
+});
+
+//Gamers Route
+app.get('/gamers', function(req, res){
+    //console.log("request made from fetch");
+    Users.find({})
+    .then(function(users){
+        res.render('gamers', {
+            users:users
         });
     });
 
@@ -135,7 +162,8 @@ app.post('/addgame', function(req,res){
     console.log(req.body);
     var newEntry = {
         title:req.body.title,
-        genre:req.body.genre
+        genre:req.body.genre,
+        user:req.user.id
     }
     new Entry(newEntry)
     .save()
