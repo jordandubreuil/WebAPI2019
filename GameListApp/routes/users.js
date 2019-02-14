@@ -38,6 +38,7 @@ router.post('/register',function(req, res){
         .then(function(user){
             if(user){
                 //add flash message that user exists
+                req.flash('error_msg', 'email already exists');
                 res.redirect("/users/register");
             }
             else{
@@ -55,6 +56,7 @@ router.post('/register',function(req, res){
                         .then(
                             function(user){
                                 //flash message that user registered
+                                req.flash('success_msg', 'you are now a registered user');
                                 res.redirect('/login');
                             }
                         ).catch(function(err){

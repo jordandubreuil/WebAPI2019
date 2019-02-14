@@ -57,26 +57,20 @@ app.use(passport.session());
 
 
 //configure flash messages
-//app.use(flash());
-/*
-app.use(function(req,res){
+app.use(flash());
+
+//Global Variables
+app.use(function(req,res,next){
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
     res.locals.error = req.flash('error');
     res.locals.user = req.user || null;
     next();
-});*/
+});
 
 // override with POST having ?_method=DELETE
 app.use(methodOverride('_method'));
 
-//Route to index.html
-router.get('/', ensureAuthenticated, function(req,res){
-    //res.sendFile(path.join(__dirname+'/index.html'));
-    //var title = "Welcome to the GameApp Page";
-
-    res.render('index');
-});
 
 //Route to entries
 router.get('/entries', ensureAuthenticated, function(req,res){
@@ -107,7 +101,17 @@ router.put('/editgame/:id', function(req,res){
 
         entry.save()
         .then(function(idea){
-            res.redirect('/');
+            res.redirect('/gamers');
+        })
+    });
+});
+
+router.get('/userlist/:id', function(req,res){
+    Entry.find({
+        user:req.params.id
+    }).then(function(entries){
+        res.render('userlist', {
+            entries:entries
         })
     });
 });
@@ -119,32 +123,34 @@ router.get('/login', function(req,res){
 
  router.post('/login', function(req, res, next){
     passport.authenticate('local', {
-        successRedirect:'/',
-        failureRedirect:'/users/register'
+        successRedirect:'/gamers',
+        failureRedirect:'/users/register',
+        failureFlash:true
     })(req,res,next);
  });
 
  router.get('/logout', function(req,res){
      req.logout();
+     req.flash('success_msg', 'You are logged out.');
      res.redirect('/login');
+
  });
 
 
- //Index route
- app.get('/',ensureAuthenticated, function(req, res){
+ //Gamer route
+ app.get('/gamers',ensureAuthenticated, function(req, res){
     //console.log("request made from fetch");
     Entry.find({user:req.user.id})
     .then(function(entries){
         res.render('index', {
-            user:req.user,
             entries:entries
         });
     });
 
 });
 
-//Gamers Route
-app.get('/gamers', function(req, res){
+//Index Route
+app.get('/', function(req, res){
     //console.log("request made from fetch");
     Users.find({})
     .then(function(users){
@@ -168,7 +174,7 @@ app.post('/addgame', function(req,res){
     new Entry(newEntry)
     .save()
     .then(function(entry){
-        res.redirect('/')
+        res.redirect('/gamers')
     });
 });
 
@@ -176,8 +182,8 @@ app.post('/addgame', function(req,res){
 app.delete('/:id', function(req,res){
     Entry.remove({_id:req.params.id})
     .then(function(){
-      //  req.flash("game removed");
-        res.redirect('/');
+        req.flash('success_msg', "game removed");
+        res.redirect('/gamers');
     });
 });
 
